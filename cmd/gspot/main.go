@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"runtime"
 )
 
 const (
@@ -15,29 +14,13 @@ const (
 \____//____/_/    \____/ /_/     
 																
 `
-
-	usageText = `
-Usage:
-	-url
-		URL of the HTTP server you want to make requests against 
-		(Required value)
-	-n
-		Number of requests you want to make
-	-c
-		The number of requests to be executed concurrently
-	`
 )
 
 func getBannerText() string { return bannerText[1:] }
-func getUsageText() string  { return usageText[1:] }
 
 func main() {
-	f := &flags{
-		n: 50,
-		c: runtime.NumCPU(),
-	}
+	f := &flags{}
 	if err := f.parse(); err != nil {
-		fmt.Println(getUsageText())
 		log.Fatal(err)
 	}
 	fmt.Println(getBannerText())
