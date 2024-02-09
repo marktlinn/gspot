@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"os"
 )
 
 const (
@@ -21,7 +21,7 @@ func getBannerText() string { return bannerText[1:] }
 func main() {
 	f := &flags{}
 	if err := f.parse(); err != nil {
-		log.Fatal(err)
+		os.Exit(1)
 	}
 	fmt.Println(getBannerText())
 	fmt.Printf("Making %d requests to %s with concurrency set to %d.\n", f.n, f.url, f.c)
