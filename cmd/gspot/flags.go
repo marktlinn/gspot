@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -14,6 +15,33 @@ import (
 type flags struct {
 	url  string
 	n, c int
+}
+
+// defines a numeric interface for positive numbers.
+type num int
+
+// converts a pointer to an int into a pointer to a num.
+func toNum(p *int) *num {
+	return (*num)(p)
+}
+
+func (n *num) Set(s string) error {
+	v, err := strconv.ParseInt(s, 0, strconv.IntSize)
+	if err != nil {
+		return fmt.Errorf("parse error: %w", err)
+	}
+	switch {
+	case err != nil:
+		err = errors.New("parse error")
+	case v <= 0:
+		err = errors.New("num should be a positive int")
+	}
+	*n = num(v)
+	return err
+}
+
+func (n *num) String() string {
+	return strconv.Itoa(int(*n))
 }
 
 func (f *flags) parse() (err error) {
@@ -58,6 +86,7 @@ func validateURL(s string) error {
 	return err
 }
 
+// validates the url scheme is either http or https.
 func validateScheme(s *string) bool {
 	return *s != "http" && *s != "https"
 }
