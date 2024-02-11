@@ -6,10 +6,14 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
 )
+
+const usageText = `
+Usage:
+	gspot [options] url
+Options:`
 
 // defines the interface for the flags expected via the cli while using gspot.
 type flags struct {
@@ -45,12 +49,18 @@ func (n *num) String() string {
 }
 
 func (f *flags) parse() (err error) {
-	flag.StringVar(&f.url, "url", "", "Sets the url which will be targeted")
-	flag.IntVar(&f.n, "n", 50, "Sets the number of requests that will be sent to the url in total")
-	flag.IntVar(&f.c, "c", runtime.NumCPU(), "set the concurrency level i.e. how many requests will be sent concurrently")
+	flag.Usage = func() {
+		fmt.Fprintln(os.Stderr, usageText[1:])
+		flag.PrintDefaults()
+	}
 
+	flag.Var(toNum(&f.n), "n", "Sets the number of requests that will be sent to the url in total")
+	flag.Var(toNum(&f.c), "c", "set the concurrency level i.e. how many requests will be sent concurrently")
 	flag.Parse()
-	if err := f.validateFlag(); err != nil {
+
+	f.url = flag.Arg(0)
+
+	if err := f.validateArgs(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		flag.Usage()
 		return err
@@ -59,14 +69,19 @@ func (f *flags) parse() (err error) {
 }
 
 // validates the flags passed to the cli.
-func (f *flags) validateFlag() error {
-	if err := validateURL(f.url); err != nil {
-		return fmt.Errorf("invalid -url: %q", err)
+func (f *flags) validateArgs() error {
+	if err := validateURL(flag.Arg(0)); err != nil {
+		return fmt.Errorf("invalid url: %q", err)
 	}
 	if f.c > f.n {
 		return fmt.Errorf("-c=%d should be less than or equal to -n=%d", f.c, f.n)
 	}
 	return nil
+}
+
+// validates the url scheme is either http or https.
+func validateScheme(s *string) bool {
+	return *s != "http" && *s != "https"
 }
 
 func validateURL(s string) error {
@@ -77,16 +92,11 @@ func validateURL(s string) error {
 
 	switch {
 	case strings.TrimSpace(s) == "":
-		err = errors.New("-url is required")
+		err = errors.New("url is required")
 	case validateScheme(&url.Scheme):
 		err = errors.New("scheme must be `http://` or `https://`")
 	case url.Host == "":
 		err = errors.New("host is missing")
 	}
 	return err
-}
-
-// validates the url scheme is either http or https.
-func validateScheme(s *string) bool {
-	return *s != "http" && *s != "https"
 }

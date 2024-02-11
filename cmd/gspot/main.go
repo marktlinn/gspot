@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
 )
 
 const (
@@ -19,7 +20,11 @@ const (
 func getBannerText() string { return bannerText[1:] }
 
 func main() {
-	f := &flags{}
+	f := &flags{
+		// defaults if no flags present.
+		n: 100,
+		c: runtime.NumCPU(),
+	}
 	if err := f.parse(); err != nil {
 		os.Exit(1)
 	}
