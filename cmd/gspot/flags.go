@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -48,29 +47,31 @@ func (n *num) String() string {
 	return strconv.Itoa(int(*n))
 }
 
-func (f *flags) parse() (err error) {
+func (f *flags) parse(flg *flag.FlagSet, args []string) (err error) {
 	flag.Usage = func() {
-		fmt.Fprintln(os.Stderr, usageText[1:])
-		flag.PrintDefaults()
+		fmt.Fprintln(flg.Output(), usageText[1:])
+		flg.PrintDefaults()
 	}
 
-	flag.Var(toNum(&f.n), "n", "Sets the number of requests that will be sent to the url in total")
-	flag.Var(toNum(&f.c), "c", "set the concurrency level i.e. how many requests will be sent concurrently")
-	flag.Parse()
+	flg.Var(toNum(&f.n), "n", "Sets the number of requests that will be sent to the url in total")
+	flg.Var(toNum(&f.c), "c", "set the concurrency level i.e. how many requests will be sent concurrently")
+	if err := flg.Parse(args); err != nil {
+		return err
+	}
 
-	f.url = flag.Arg(0)
+	f.url = flg.Arg(0)
 
-	if err := f.validateArgs(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		flag.Usage()
+	if err := f.validateArgs(flg); err != nil {
+		fmt.Fprintln(flg.Output(), err)
+		flg.Usage()
 		return err
 	}
 	return nil
 }
 
 // validates the flags passed to the cli.
-func (f *flags) validateArgs() error {
-	if err := validateURL(flag.Arg(0)); err != nil {
+func (f *flags) validateArgs(flg *flag.FlagSet) error {
+	if err := validateURL(flg.Arg(0)); err != nil {
 		return fmt.Errorf("invalid url: %q", err)
 	}
 	if f.c > f.n {
