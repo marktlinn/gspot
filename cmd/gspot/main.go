@@ -38,5 +38,8 @@ func run(flg *flag.FlagSet, args []string, out io.Writer) error {
 	}
 	fmt.Fprintln(out, getBannerText())
 	fmt.Fprintf(out, "Making %d requests to %s with concurrency set to %d.\n", f.n, f.url, f.c)
+
+	// var ttl gspot.Result
+
 	return nil
 }
