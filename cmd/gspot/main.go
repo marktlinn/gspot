@@ -4,8 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"runtime"
+	"time"
+
+	"github.com/marktlinn/gspot/gspot"
 )
 
 const (
@@ -39,7 +43,28 @@ func run(flg *flag.FlagSet, args []string, out io.Writer) error {
 	fmt.Fprintln(out, getBannerText())
 	fmt.Fprintf(out, "Making %d requests to %s with concurrency set to %d.\n", f.n, f.url, f.c)
 
-	// var ttl gspot.Result
+	var ttl gspot.Result
+	ttl.Merge(&gspot.Result{
+		Bytes:    1024,
+		Status:   http.StatusOK,
+		Duration: time.Second,
+	})
+	ttl.Merge(&gspot.Result{
+		Bytes:    1024,
+		Status:   http.StatusOK,
+		Duration: time.Second,
+	})
+	ttl.Merge(&gspot.Result{
+		Status:   http.StatusConflict,
+		Duration: time.Second,
+	})
+	ttl.Merge(&gspot.Result{
+		Bytes:    556,
+		Status:   http.StatusOK,
+		Duration: 2 * time.Second,
+	})
+	ttl.Finalise(2 * time.Second)
+	ttl.Fprint(out)
 
 	return nil
 }

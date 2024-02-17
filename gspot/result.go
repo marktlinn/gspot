@@ -55,12 +55,12 @@ func (r *Result) Fprint(out io.Writer) {
 		fmt.Fprintf(out, format, args...)
 	}
 	data("\nSummary:\n")
-	data("\nSuccess: %.0f%%\n", r.success())
-	data("\nRequests: %d\n", r.Requests)
-	data("\nRPS: %.1f\n", r.RPS)
-	data("\nBytes: %d\n", r.Bytes)
-	data("\nDuration: %s\n", r.Duration)
-	data("\nErrors: %d\n", r.Errors)
+	data("\tSuccess: %.0f%%\n", r.success())
+	data("\tRequests: %d\n", r.Requests)
+	data("\tRPS: %.1f\n", r.RPS)
+	data("\tBytes: %d\n", r.Bytes)
+	data("\tDuration: %s\n", r.Duration)
+	data("\tErrors: %d\n", r.Errors)
 	if r.Requests > 1 {
 		data("\tFastest : %s\n", round(r.Fastest))
 		data("\tSlowest : %s\n", round(r.Slowest))
