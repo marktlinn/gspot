@@ -71,7 +71,7 @@ func TestRun(t *testing.T) {
 				t.Fatalf("got nil; wanted err")
 			}
 			if e.stderr.Len() == 0 {
-				t.Fatal("stderr = 0 bytes;wanted >0")
+				t.Fatal("stderr = 0 bytes; wanted >0")
 			}
 		})
 	}
