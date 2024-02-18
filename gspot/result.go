@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -75,4 +76,11 @@ func round(t time.Duration) time.Duration {
 func (r *Result) success() float64 {
 	res, e := float64(r.Requests), float64(r.Errors)
 	return (res - e) / res * 100
+}
+
+// Returns the result as a string.
+func (r *Result) String() string {
+	var s strings.Builder
+	r.Fprint(&s)
+	return s.String()
 }
