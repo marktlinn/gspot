@@ -16,8 +16,8 @@ Options:`
 
 // defines the interface for the flags expected via the cli while using gspot.
 type flags struct {
-	url  string
-	n, c int
+	url       string
+	n, c, rps int
 }
 
 // defines a numeric interface for positive numbers.
@@ -55,6 +55,7 @@ func (f *flags) parse(flg *flag.FlagSet, args []string) (err error) {
 
 	flg.Var(toNum(&f.n), "n", "Sets the number of requests that will be sent to the url in total")
 	flg.Var(toNum(&f.c), "c", "set the concurrency level i.e. how many requests will be sent concurrently")
+	flg.Var(toNum(&f.rps), "t", "Sets a throttle limit for the number of requests per second")
 	if err := flg.Parse(args); err != nil {
 		return err
 	}
