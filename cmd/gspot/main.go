@@ -41,13 +41,19 @@ func run(flg *flag.FlagSet, args []string, out io.Writer) error {
 	}
 	fmt.Fprintln(out, getBannerText())
 	fmt.Fprintf(out, "Making %d requests to %s with concurrency set to %d.\n", f.n, f.url, f.c)
+	if f.rps > 0 {
+		fmt.Fprintf(out, "(RPS set at %d)\n", f.rps)
+	}
 
 	req, err := http.NewRequest(http.MethodGet, f.url, http.NoBody)
 	if err != nil {
 		return err
 	}
 
-	var c gspot.Client
+	c := &gspot.Client{
+		C:   f.c,
+		RPS: f.rps,
+	}
 	ttl := c.Do(req, f.n)
 	ttl.Fprint(out)
 
