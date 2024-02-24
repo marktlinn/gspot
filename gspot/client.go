@@ -23,19 +23,16 @@ func (c *Client) do(ctx context.Context, r *http.Request, n int) *Result {
 		p = throttle(p, time.Second/time.Duration(c.RPS*c.C))
 	}
 
-	var ttl Result
-	for ; n > 0; n-- {
-		select {
-		case <-ctx.Done():
-			return &ttl
-		default:
-			ttl.Merge(Send(r))
-		}
+	var (
+		ttl Result
+	)
+	for res := range split(p, c.C, Send) {
+		ttl.Merge(res)
 	}
 	return &ttl
 }
 
-// Sends n HTTPS requests and retuns the aggregated result once all have completed.
+// Sends n HTTPS requests and returns the aggregated result once all have completed.
 func (c *Client) Do(ctx context.Context, r *http.Request, n int) *Result {
 	t := time.Now()
 	ttl := c.do(ctx, r, n)

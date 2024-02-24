@@ -2,6 +2,7 @@ package gspot
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 )
@@ -13,12 +14,24 @@ type SendFunc func(*http.Request) *Result
 func Send(r *http.Request) *Result {
 	t := time.Now()
 
+	var (
+		statusCode int
+		bytes      int64
+	)
+
+	res, err := http.DefaultClient.Do(r)
+	if err == nil {
+		statusCode = res.StatusCode
+		bytes, err = io.Copy(io.Discard, res.Body)
+		res.Body.Close()
+	}
+
 	fmt.Printf("req: %s\n", r.URL)
-	time.Sleep(100 * time.Millisecond)
 
 	return &Result{
 		Duration: time.Since(t),
-		Bytes:    100,
-		Status:   http.StatusOK,
+		Bytes:    bytes,
+		Status:   statusCode,
+		Error:    err,
 	}
 }

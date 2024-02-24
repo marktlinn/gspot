@@ -45,11 +45,12 @@ func run(flg *flag.FlagSet, args []string, out io.Writer) error {
 	}
 	fmt.Fprintln(out, getBannerText())
 	fmt.Fprintf(out, "Making %d requests to %s with concurrency set to %d.\n", f.n, f.url, f.c)
+
 	if f.rps > 0 {
 		fmt.Fprintf(out, "(RPS set at %d)\n", f.rps)
 	}
 
-	const timeout = time.Second
+	const timeout = time.Minute
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	ctx, stop := signal.NotifyContext(ctx, os.Interrupt)
 	defer cancel()

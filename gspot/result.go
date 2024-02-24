@@ -50,7 +50,6 @@ func (r *Result) Finalise(total time.Duration) *Result {
 }
 
 // Formats and prints the associated results to an io.Writer.
-
 func (r *Result) Fprint(out io.Writer) {
 	data := func(format string, args ...any) {
 		fmt.Fprintf(out, format, args...)

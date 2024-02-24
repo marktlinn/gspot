@@ -30,9 +30,7 @@ func toNum(p *int) *num {
 
 func (n *num) Set(s string) error {
 	v, err := strconv.ParseInt(s, 0, strconv.IntSize)
-	if err != nil {
-		return fmt.Errorf("parse error: %w", err)
-	}
+
 	switch {
 	case err != nil:
 		err = errors.New("parse error")
@@ -47,7 +45,7 @@ func (n *num) String() string {
 	return strconv.Itoa(int(*n))
 }
 
-func (f *flags) parse(flg *flag.FlagSet, args []string) (err error) {
+func (f *flags) parse(flg *flag.FlagSet, args []string) error {
 	flag.Usage = func() {
 		fmt.Fprintln(flg.Output(), usageText[1:])
 		flg.PrintDefaults()
@@ -60,13 +58,14 @@ func (f *flags) parse(flg *flag.FlagSet, args []string) (err error) {
 		return err
 	}
 
-	f.url = flg.Arg(0)
-
 	if err := f.validateArgs(flg); err != nil {
 		fmt.Fprintln(flg.Output(), err)
 		flg.Usage()
 		return err
 	}
+
+	f.url = flg.Arg(0)
+
 	return nil
 }
 
