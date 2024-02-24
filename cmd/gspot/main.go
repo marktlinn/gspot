@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"os/signal"
 	"runtime"
+	"time"
 
 	"github.com/marktlinn/gspot/gspot"
 )
@@ -45,6 +49,12 @@ func run(flg *flag.FlagSet, args []string, out io.Writer) error {
 		fmt.Fprintf(out, "(RPS set at %d)\n", f.rps)
 	}
 
+	const timeout = time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	ctx, stop := signal.NotifyContext(ctx, os.Interrupt)
+	defer cancel()
+	defer stop()
+
 	req, err := http.NewRequest(http.MethodGet, f.url, http.NoBody)
 	if err != nil {
 		return err
@@ -54,8 +64,13 @@ func run(flg *flag.FlagSet, args []string, out io.Writer) error {
 		C:   f.c,
 		RPS: f.rps,
 	}
-	ttl := c.Do(req, f.n)
+
+	ttl := c.Do(ctx, req, f.n)
 	ttl.Fprint(out)
+
+	if err := ctx.Err(); errors.Is(err, context.DeadlineExceeded) {
+		return fmt.Errorf("timed out in %s", timeout)
+	}
 
 	return nil
 }
