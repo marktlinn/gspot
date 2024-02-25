@@ -14,6 +14,7 @@ type Client struct {
 }
 
 // a helper function that sends n requests.
+// Idle connections are closed once the performance data has been registered.
 func (c *Client) do(ctx context.Context, r *http.Request, n int) *Result {
 	p := produce(ctx, n, func() *http.Request {
 		return r.Clone(ctx)
@@ -24,9 +25,11 @@ func (c *Client) do(ctx context.Context, r *http.Request, n int) *Result {
 	}
 
 	var (
-		ttl Result
+		ttl    Result
+		client = c.client()
 	)
-	for res := range split(p, c.C, Send) {
+	defer client.CloseIdleConnections()
+	for res := range split(p, c.C, c.send(client)) {
 		ttl.Merge(res)
 	}
 	return &ttl
@@ -37,4 +40,18 @@ func (c *Client) Do(ctx context.Context, r *http.Request, n int) *Result {
 	t := time.Now()
 	ttl := c.do(ctx, r, n)
 	return ttl.Finalise(time.Since(t))
+}
+
+func (c *Client) send(client *http.Client) SendFunc {
+	return func(r *http.Request) *Result {
+		return Send(client, r)
+	}
+}
+
+func (c *Client) client() *http.Client {
+	return &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConnsPerHost: c.C,
+		},
+	}
 }

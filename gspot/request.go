@@ -11,7 +11,7 @@ import (
 type SendFunc func(*http.Request) *Result
 
 // Sends an HTTP request and returns the the perf result.
-func Send(r *http.Request) *Result {
+func Send(c *http.Client, r *http.Request) *Result {
 	t := time.Now()
 
 	var (
@@ -19,7 +19,7 @@ func Send(r *http.Request) *Result {
 		bytes      int64
 	)
 
-	res, err := http.DefaultClient.Do(r)
+	res, err := c.Do(r)
 	if err == nil {
 		statusCode = res.StatusCode
 		bytes, err = io.Copy(io.Discard, res.Body)
