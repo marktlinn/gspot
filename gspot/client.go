@@ -2,6 +2,7 @@ package gspot
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"runtime"
 	"time"
@@ -20,6 +21,19 @@ type Client struct {
 	RPS     int
 	C       int
 	Timeout time.Duration
+}
+
+// When created and passed to the Do functions, Option can be used for setting and changing the Client's default behvaiour.
+type Option func(*Client)
+
+// The Timeout option changes the Client's RPS field.
+func Timeout(d time.Duration) Option {
+	return func(c *Client) { c.Timeout = d }
+}
+
+// The Concurrency option changes the Client's concurrency level.
+func Concurrency(n int) Option {
+	return func(c *Client) { c.C = n }
 }
 
 // a helper function that sends n requests.
@@ -44,8 +58,28 @@ func (c *Client) do(ctx context.Context, r *http.Request, n int) *Result {
 	return &ttl
 }
 
+/*
+Exposeses the Client.Do method via a function that can be easily called. Sends n Get requests to the specified url with a concurrency level defaulting to the number of CPUs on the host machine.
+
+Do can take Options (a variadic func) for any values to be set in the Client's fields.
+*/
+func Do(ctx context.Context, url string, n int, options ...Option) (*Result, error) {
+	r, err := http.NewRequest(http.MethodGet, url, http.NoBody)
+	if err != nil {
+		return nil, fmt.Errorf("new http request error: %w", err)
+	}
+	var c Client
+	for _, option := range options {
+		option(&c)
+	}
+	return c.Do(ctx, r, n), nil
+}
+
 // Sends n HTTPS requests and returns the aggregated result once all have completed.
 func (c *Client) Do(ctx context.Context, r *http.Request, n int) *Result {
+	if c == nil {
+		panic("error in gspot.Do(): Client cannot be nil.")
+	}
 	t := time.Now()
 	ttl := c.do(ctx, r, n)
 	return ttl.Finalise(time.Since(t))
