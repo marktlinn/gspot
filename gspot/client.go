@@ -3,6 +3,7 @@ package gspot
 import (
 	"context"
 	"net/http"
+	"runtime"
 	"time"
 )
 
@@ -29,7 +30,7 @@ func (c *Client) do(ctx context.Context, r *http.Request, n int) *Result {
 	})
 
 	if c.RPS > 0 {
-		p = throttle(p, time.Second/time.Duration(c.RPS*c.C))
+		p = throttle(p, time.Second/time.Duration(c.RPS*c.concurrencyDefault()))
 	}
 
 	var (
@@ -37,7 +38,7 @@ func (c *Client) do(ctx context.Context, r *http.Request, n int) *Result {
 		client = c.client()
 	)
 	defer client.CloseIdleConnections()
-	for res := range split(p, c.C, c.send(client)) {
+	for res := range split(p, c.concurrencyDefault(), c.send(client)) {
 		ttl.Merge(res)
 	}
 	return &ttl
@@ -60,7 +61,15 @@ func (c *Client) client() *http.Client {
 	return &http.Client{
 		Timeout: c.Timeout,
 		Transport: &http.Transport{
-			MaxIdleConnsPerHost: c.C,
+			MaxIdleConnsPerHost: c.concurrencyDefault(),
 		},
 	}
+}
+
+// Sets the concurrency level default to the number of CPU on the host machine if level not explicitly set.
+func (c *Client) concurrencyDefault() int {
+	if c.C > 0 {
+		return c.C
+	}
+	return runtime.NumCPU()
 }

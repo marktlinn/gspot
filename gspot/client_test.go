@@ -22,9 +22,7 @@ func TestClientDo(t *testing.T) {
 		req = newRequest(t, http.MethodGet, server.URL)
 	)
 
-	c := Client{
-		C: 1,
-	}
+	var c Client
 
 	ttl := c.Do(context.Background(), req, wantRes)
 	if got := gotRes.Load(); got != wantRes {
