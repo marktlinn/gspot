@@ -6,11 +6,19 @@ import (
 	"time"
 )
 
-// Cleint encapsulates the Concurency level (C)
-// and the throttle limit for requests per second (RPS)
+/*
+Client encapsulates:
+
+* C - the Concurency level
+
+* RSP - the throttle limit for requests per second
+
+* Timeout - the maximum time each request should be allowed before returning an error. If not set or set to 0, no Timeout is applied.
+*/
 type Client struct {
-	RPS int
-	C   int
+	RPS     int
+	C       int
+	Timeout time.Duration
 }
 
 // a helper function that sends n requests.
@@ -50,6 +58,7 @@ func (c *Client) send(client *http.Client) SendFunc {
 
 func (c *Client) client() *http.Client {
 	return &http.Client{
+		Timeout: c.Timeout,
 		Transport: &http.Transport{
 			MaxIdleConnsPerHost: c.C,
 		},

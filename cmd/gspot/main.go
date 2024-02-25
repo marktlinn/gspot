@@ -62,8 +62,9 @@ func run(flg *flag.FlagSet, args []string, out io.Writer) error {
 	}
 
 	c := &gspot.Client{
-		C:   f.c,
-		RPS: f.rps,
+		C:       f.c,
+		RPS:     f.rps,
+		Timeout: 15 * time.Second,
 	}
 
 	ttl := c.Do(ctx, req, f.n)
